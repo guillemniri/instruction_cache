@@ -30,6 +30,7 @@ module sargantana_icache_checker
     input  logic           [WAY_WIDHT-1:0] ifill_data_i     , //- Cache line. 
     output logic        [ICACHE_N_WAY-1:0] cline_hit_o      ,
     output logic         [FETCH_WIDHT-1:0] data_o           ,
+    output logic[$clog2(ICACHE_N_WAY)-1:0] way_idx_o        ,
     
     input  logic [ICACHE_N_WAY-1:0][TAG_WIDHT-1:0] read_tags_i,
     input  logic [ICACHE_N_WAY-1:0][WAY_WIDHT-1:0] data_rd_i    //- Cache lines read.
@@ -70,6 +71,8 @@ endfunction : chunk_sel
 
 
 assign data_o = cline_sel[idx] ;
+assign way_idx_o = idx;
+
 
                                  
 endmodule

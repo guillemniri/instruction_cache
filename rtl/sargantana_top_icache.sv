@@ -55,6 +55,7 @@ logic     [ICACHE_N_WAY-1:0] data_req_valid  ;
 logic     [ICACHE_N_WAY-1:0] way_valid_bits  ;      
 logic [ICACHE_IDX_WIDTH-1:0] addr_valid      ;
 logic     [ICACHE_N_WAY-1:0] cline_hit       ;
+logic [$clog2(ICACHE_N_WAY)-1:0] way_idx     ;
 
 logic [ICACHE_N_WAY-1:0][TAG_WIDHT-1:0] way_tags     ;
 logic [ICACHE_N_WAY-1:0][WAY_WIDHT-1:0] cline_data_rd;
@@ -208,6 +209,11 @@ sargantana_icache_replace_unit replace_unit(
     .cache_wr_ena_i ( cache_wr_ena     ),
     .flush_ena_i    ( flush_enable     ),
     .way_valid_bits_i ( way_valid_bits      ),
+    .miss_i               ( ~cline_hit ),
+    .lru_way_valid_bits_i ( way_valid_bits ),
+    .addr_i               ( idx_d[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH] ),
+    .set_idx_i            ( idx_q[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH] ),
+    .way_idx_i            ( way_idx ),
     .we_valid_o     ( tag_we_valid     ),
     .addr_valid_o   ( addr_valid       ),
     .cmp_en_q       ( cmp_enable_q       ),
@@ -228,7 +234,8 @@ sargantana_icache_checker ichecker(
     .data_rd_i          ( cline_data_rd       ),
     .cline_hit_o        ( cline_hit           ),
     .ifill_data_i       ( ifill_resp_i.data   ),
-    .data_o             ( icache_resp_o.data  )
+    .data_o             ( icache_resp_o.data  ),
+    .way_idx_o          ( way_idx             )
 );
 
 

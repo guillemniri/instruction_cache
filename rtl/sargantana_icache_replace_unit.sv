@@ -38,6 +38,11 @@ module sargantana_icache_replace_unit
     input  logic                            cmp_en_q         ,
     input  logic     [ICACHE_IDX_WIDTH-1:0] cline_index_i    , //-From core 
     input  logic [$clog2(ICACHE_N_WAY)-1:0] way_to_replace_q ,
+    input  logic                            miss_i,
+    input  logic[ASSOCIATIVE-1:0]           lru_way_valid_bits_i,
+    input  logic[ICACHE_IDX_WIDTH-1:0]      addr_i,
+    input  logic[ICACHE_IDX_WIDTH-1:0]      set_idx_i,
+    input  logic[$clog2(ASSOCIATIVE)-1:0]   way_idx_i,
     output logic [$clog2(ICACHE_N_WAY)-1:0] way_to_replace_d ,
     output logic [$clog2(ICACHE_N_WAY)-1:0] way_to_replace_o ,
     output logic                            we_valid_o       ,
@@ -48,14 +53,13 @@ module sargantana_icache_replace_unit
 );
 
 //logic inval_req;
-logic lfsr_ena ;
 logic all_ways_valid ;
 
 //logic [ICACHE_IDX_WIDTH-1:0] addr_to_inval       ; 
 //logic     [ICACHE_N_WAY-1:0] way_to_inval_oh     ;  // way to invalidate (onehot)
 logic     [ICACHE_N_WAY-1:0] way_to_replace_q_oh ; // way to replace (onehot)
 
-logic [$clog2(ICACHE_N_WAY)-1:0] a_random_way  ;
+logic [$clog2(ICACHE_N_WAY)-1:0] lru_way  ;
 logic [$clog2(ICACHE_N_WAY)-1:0] a_invalid_way ;
 
 //--------------------------------------------------------------------------
@@ -94,7 +98,7 @@ assign we_valid_o = cache_wr_ena_i | inval_req ;
 //- Linear feedback shift register (LFSR)
 assign lfsr_ena   = cache_wr_ena_i & all_ways_valid;
 
-assign way_to_replace_o = (all_ways_valid) ? a_random_way : a_invalid_way;
+assign way_to_replace_o = (all_ways_valid) ? lru_way : a_invalid_way;
 assign way_to_replace_d = (cmp_en_q) ? way_to_replace_o : way_to_replace_q;
 
 // translate to Onehot
@@ -109,12 +113,25 @@ assign data_req_valid_o   = (cache_rd_ena_i ) ?                  '1 :
 
 
 
-// generate random cacheline index
-sargantana_icache_lfsr lfsr (
-    .clk_i          ( clk_i         ),
-    .rst_ni         ( rstn_i        ),
-    .en_i           ( lfsr_ena      ),
-    .refill_way_o   ( a_random_way  )
+// find LRU way + update LRU values
+icache_lru_unit #(
+    .P_NWAYS               ( ASSOCIATIVE                    ),
+    .P_WDEPTH              ( ICACHE_DEPTH                   ),
+    .p_array_t             ( logic[ASSOCIATIVE-1:0]         ),
+    .p_setidx_t            ( logic[ICACHE_INDEX_WIDTH-1:0]  ),
+    .p_wayidx_t            ( logic[$clog2(ASSOCIATIVE)-1:0] )
+) lru_unit (
+    .clk_i            ( clk_i                ),
+    .rstn_i           ( rstn_i               ),
+    .flush_i          ( flush_ena_i          ),
+    .replace_i        ( cache_wr_ena_i       ),
+    .update_i         ( ~miss_i              ),
+    .way_valid_bits_i ( lru_way_valid_bits_i ),
+    .addr_i           ( addr_i               ),
+    .set_idx_i        ( set_idx_i            ),
+    .rep_way_i        ( way_to_replace_q     ),
+    .upd_way_i        ( way_idx_i            ),
+    .lru_way_o        ( lru_way              )
 );
 
 

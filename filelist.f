@@ -15,4 +15,5 @@
 ./rtl/sargantana_icache_tzc_idx.sv
 ./rtl/sargantana_icache_ff.sv
 ./rtl/sargantana_icache_replace_unit.sv
+./rtl/sargantana_icache_lru_unit.sv
 ./rtl/sargantana_top_icache.sv
