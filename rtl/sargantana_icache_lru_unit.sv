@@ -1,26 +1,6 @@
-/*
- * Copyright 2023 BSC*
- * *Barcelona Supercomputing Center (BSC)
- * 
- * SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
- * 
- * Licensed under the Solderpad Hardware License v 2.1 (the “License”); you
- * may not use this file except in compliance with the License, or, at your
- * option, the Apache License version 2.0. You may obtain a copy of the
- * License at
- * 
- * https://solderpad.org/licenses/SHL-2.1/
- * 
- * Unless required by applicable law or agreed to in writing, any work
- * distributed under the License is distributed on an “AS IS” BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 import sargantana_icache_pkg::*;
 
-module icache_lru_unit #(
+module sargantana_icache_lru_unit #(
     parameter int unsigned P_NWAYS    = 0,
     parameter int unsigned P_WDEPTH   = 0,
     parameter type         p_array_t  = logic,
@@ -49,8 +29,6 @@ access_order_t [P_WDEPTH-1:0] aot_q;
 
 p_wayidx_t lru_way;
 
-logic [$clog2(P_NWAYS)-1:0] way_value; // lru value for accessed way
-
 //------------------------
 // LRU VALUES REGS
 //------------------------
@@ -60,14 +38,6 @@ begin : regs
     if (~rstn_i | flush_i) aot_q <= '0;
     else aot_q <= valid[set_idx_i] ? aot_d : aot_q;
 end
-
-/*
-for (genvar i=0; i < P_WDEPTH; ++i) begin
-    for (genvar j=0; j < P_NWAYS; ++j) begin
-        reg_ff_sr #(logic [$clog2(P_NWAYS)-1:0]) aot_reg (clk_i, rstn_i, valid[i], 0, aot_d[i][j], aot_q[i][j]);
-    end
-end
-*/
 
 //------------------------
 // LRU WAY SELECT
@@ -88,8 +58,6 @@ assign lru_way_o = lru_way;
 //------------------------
 // LRU VALUES UPDATE
 //------------------------
-
-assign way_value = aot_q[set_idx_i][upd_way_i];
 
 always_comb
 begin : update_lru_values
@@ -112,7 +80,7 @@ begin : update_lru_values
             aot_d[set_idx_i][upd_way_i] = 0;
             valid[set_idx_i] = 1;
             for (int i = 0; i < P_NWAYS; ++i) begin
-                if (i[$clog2(P_NWAYS)-1:0] != upd_way_i & way_valid_bits_i[i] & aot_q[set_idx_i][i] < way_value)
+                if (i[$clog2(P_NWAYS)-1:0] != upd_way_i & way_valid_bits_i[i] & aot_q[set_idx_i][i] < aot_q[set_idx_i][upd_way_i])
                     aot_d[set_idx_i][i] = aot_q[set_idx_i][i] + 1;
             end
         end

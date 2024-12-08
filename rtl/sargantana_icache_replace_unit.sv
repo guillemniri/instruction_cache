@@ -114,7 +114,7 @@ assign data_req_valid_o   = (cache_rd_ena_i ) ?                  '1 :
 
 
 // find LRU way + update LRU values
-icache_lru_unit #(
+sargantana_icache_lru_unit #(
     .P_NWAYS               ( ASSOCIATIVE                    ),
     .P_WDEPTH              ( ICACHE_DEPTH                   ),
     .p_array_t             ( logic[ASSOCIATIVE-1:0]         ),
