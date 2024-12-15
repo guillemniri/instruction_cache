@@ -209,7 +209,7 @@ sargantana_icache_replace_unit replace_unit(
     .cache_wr_ena_i ( cache_wr_ena     ),
     .flush_ena_i    ( flush_enable     ),
     .way_valid_bits_i ( way_valid_bits      ),
-    .miss_i               ( ~cline_hit ),
+    .miss_i               ( ~|cline_hit ),
     .lru_way_valid_bits_i ( way_valid_bits ),
     .addr_i               ( idx_d[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH] ),
     .set_idx_i            ( idx_q[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH] ),
